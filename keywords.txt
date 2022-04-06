@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For Matrix
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SmoothAin	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+insertValue	KEYWORD2
+updateAve	KEYWORD2
+ave         KEYWORD2
+std         KEYWORD2
+getNave     KEYWORD2
+printValues KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
