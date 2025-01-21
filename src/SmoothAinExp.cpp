@@ -3,21 +3,23 @@
 //  C++ Code for object-oriented interface for smoothing of analog input readings
 //  with an exponentially-weighted average
 //
-//  Gerald Recktenwald, gerry@pdx.edu
-//  2022-02-23
+//  Gerald Recktenwald, gerry@pdx.edu, 2022-02-21
+//
+//  Updates:
+//    2022-08-08:
+//      * Initialize 
 
 #include "SmoothAinExp.h"
 
 // -- constructor 
-SmoothAinExp::SmoothAinExp( int inPin, float alpha ) {
+SmoothAinExp::SmoothAinExp( int sensorPin, float alpha ) {
 
-  _inPin = inPin;
-  _nReadings = 0;
-  _ave = 0.0;
-  _aveOld = 0.0;
+  _inPin = sensorPin;
+  _nReadings = -1;
+  _ave = analogRead(_inPin);   //  Initialize with realistic value, not zero
+  _aveOld = _ave;
   _alpha = alpha;
-  _oneMinusAlpha = 1.0 - _alpha;  //  Avoid repeated subtraction operation
-  _readDelay = 10;                //  delay to allow ADC to settle
+  _readDelay = 10;     //  delay between readings to allow ADC to settle
 }
 
 // ------------------------------------------------------------------------------
@@ -31,27 +33,21 @@ void SmoothAinExp::insertValue(uint32_t value) {
 // ------------------------------------------------------------------------------
 //  Get a new reading, update the average
 float SmoothAinExp::updateAve(void) {
-  uint32_t value;
   
-  value = analogRead(_inPin);
+  uint32_t value = analogRead(_inPin);
   delay(_readDelay);
   value = analogRead(_inPin);
   _lastRaw = value;
 
-  // -- On first reading, set _ave and _aveOld to the first raw value
-  //    This sets the initial value of the average to a reasonable value
-  //    and is preferable to having the initial value of _aveOld to be zero.
-  if ( _nReadings==0 ) {  //  Note:  _nReadings = 0 in constructor
-    _ave = (float)value;
-    _aveOld = _ave;
+  if ( _nReadings<0 ) {   //  Insurance that sequence is initialized with realistic value
+    _ave = (float)value;  //  Initial value should not be zero
+    _aveOld = _ave;       //  and there is no history
     _nReadings = 1;
     return( _ave );
   }
-  
-  // -- Standard update rule applies to all but the first reading
   _nReadings++;
+  _ave= _alpha*(float)value + (1.0-_alpha)*_aveOld;  //  Exp weighted average
   _aveOld = _ave;
-  _ave= _alpha*(float)value + _oneMinusAlpha*_aveOld;  //  Exp weighted average
   return( _ave );
 }
 
@@ -65,7 +61,6 @@ float SmoothAinExp::getAlpha(void) {
 //   Change the number of values currently used in the running average
 void SmoothAinExp::setAlpha(float alpha) {
   _alpha = alpha;
-  _oneMinusAlpha = 1.0 - _alpha;  //  Avoid repeated subtraction operation
 }
 
 // ------------------------------------------------------------------------------
